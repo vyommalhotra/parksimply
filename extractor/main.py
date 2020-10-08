@@ -1,6 +1,7 @@
 import cv2
 from cars import car_extractor
 from spots import spot_extractor
+from initial_transformations import transformer
 
 if __name__ == '__main__':
     print('begin extracting')
@@ -19,6 +20,9 @@ def process_frames():
 
         # get next frame
         ret, frame = capture.read()
+
+        # birds eye transformation
+        transformed = transformer.birds_eye(frame)
 
         # pass frame to extractors
         car_ex.process_frame(frame)
