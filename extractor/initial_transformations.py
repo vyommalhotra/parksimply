@@ -9,7 +9,7 @@ class transformer:
         src = np.float32([[1265, 512], [117, 1424], [2538, 1504], [1914, 517]])
         dst = np.float32([[0,0],[0,800],[1200, 800],[1200,0]])
         M = cv2.getPerspectiveTransform(src, dst)
-        warped_img = cv2.warpPerspective(img, M, (2880, 1626))
+        warped_img = cv2.warpPerspective(img, M, (1200, 800))
         plt.imshow(warped_img) # Show results
         plt.show()
 
