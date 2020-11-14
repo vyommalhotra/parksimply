@@ -22,4 +22,4 @@ if __name__ == "__main__":
         # For the IDs that don't yet have a match, perform a match
         # for each previous and new match, get Image from car and spot classes
         # save each image -> rest call to front end (later).
-        
+        pass
