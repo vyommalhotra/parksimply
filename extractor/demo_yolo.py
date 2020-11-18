@@ -78,6 +78,8 @@ print('Shape of pre-processed image:', x.shape)
 
 class_IDs, scores, bounding_boxs = net(x)
 
+print(bounding_boxs)
+
 ax = utils.viz.plot_bbox(img, bounding_boxs[0], scores[0],
                          class_IDs[0], class_names=net.classes)
 plt.show()
