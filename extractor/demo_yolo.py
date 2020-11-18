@@ -50,7 +50,7 @@ net = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True)
 #
 # Please beware that `orig_img` is resized to short edge 600px.
 
-im_fname = utils.download('https://i.imgur.com/iJFybNZ.jpeg')
+im_fname = utils.download('https://i.imgur.com/SGCwcog.jpg')
 x, img = data.transforms.presets.yolo.load_test(im_fname, short=512)
 print('Shape of pre-processed image:', x.shape)
 
