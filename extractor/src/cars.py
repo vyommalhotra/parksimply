@@ -18,7 +18,7 @@ class carDetector:
         #Creating our model, we can change this to other models if needed. Check model zoo online for more.
         self.cvModel = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True)
 
-    def detectCars(inputFrame):
+    def get_cars(inputFrame):
         self.currFrame = inputFrame
 
         #Detect cars here
@@ -30,8 +30,9 @@ class carDetector:
         self.prevFrame = self.currFrame
 
         #Return bounding boxes with carIDs to broker
+        return ['1', '2', '3', '4']
 
-    def markCar(inputImg, inputID):
+    def get_car_image(inputID, inputImg):
         #Cross reference inputID with stored IDs
 
         #Highlight location of ID car on the inputImg
