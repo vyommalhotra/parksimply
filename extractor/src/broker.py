@@ -12,8 +12,8 @@ class Broker:
     def get_spots(self):
         return []
     
-    def get_cars(self):
-        return []
+    def get_cars(self, frame):
+        return self.car_detector.get_cars()
 
     def get_spot_image(self, spot_id):
         pass
@@ -40,6 +40,7 @@ class Broker:
 
             # get car Ids from car class
             car_ids = self.get_cars(frame)
+            print("frame {} : IDS {}".format(self.frame_num, car_ids)) #TODO: remove this
 
             # provide current spot and car IDS
             self.matcher.set_ids([],[])

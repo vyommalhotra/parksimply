@@ -3,7 +3,7 @@ import cv2
 
 if __name__ == "__main__":
 
-    footage = cv2.VideoCapture('')
+    footage = cv2.VideoCapture('../footage/video.mp4')
     broker = Broker(footage, skip=30)
 
     # while there is still footage left
