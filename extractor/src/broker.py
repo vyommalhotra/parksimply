@@ -13,7 +13,7 @@ class Broker:
         return []
     
     def get_cars(self, frame):
-        return self.car_detector.get_cars()
+        return self.car_detector.get_cars(frame)
 
     def get_spot_image(self, spot_id):
         pass
@@ -36,7 +36,7 @@ class Broker:
             self.footage.set(1, self.frame_num)
 
             # get spot Ids from spot class
-            spot_ids = self.get_spots(frame)
+            #spot_ids = self.get_spots(frame)
 
             # get car Ids from car class
             car_ids = self.get_cars(frame)
@@ -49,13 +49,14 @@ class Broker:
             matches = self.matcher.match()
 
             # for each pre-existing and new match
-            for match in matches:
+            #for match in matches:
                 # get image from spot class then car class 
-                self.get_spot_image()
-                self.get_car_image()
+            #    self.get_spot_image()
+                #self.get_car_image()
+            print(self.car_detector.get_car_image(5))
 
                 # TODO: send image to front end
-                pass
+            #    pass
 
             # not done
             return False

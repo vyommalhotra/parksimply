@@ -6,6 +6,9 @@ from deep_sort import nn_matching
 from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
 from deep_sort import generate_detections as gdet
+import cv2
+import numpy as np
+
 #Check out demo_yolo.py for explanation on how to set the model up
 
 #Object Tracking links
@@ -22,11 +25,11 @@ class carDetector:
         self.currFrame = None
 
         #Threshold of what is a car
-        self.thresh = 0.5
+        self.thresh = 0.7
 
-        NUM_CLASS = read_class_names(YOLO_COCO_CLASSES)
-        key_list = list(NUM_CLASS.keys()) 
-        val_list = list(NUM_CLASS.values())
+        self.NUM_CLASS = read_class_names(YOLO_COCO_CLASSES)
+        self.key_list = list(self.NUM_CLASS.keys()) 
+        self.val_list = list(self.NUM_CLASS.values())
 
         #Creating deep sort object, these parameters can be massaged
         max_cosine_distance = 0.7
@@ -38,8 +41,9 @@ class carDetector:
 
         #Creating our model, we can change this to other models if needed. Check model zoo online for more.
         self.cvModel = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True)
+        print("init carDetector")
 
-    def get_cars(inputFrame):
+    def get_cars(self, inputFrame):
         self.currFrame = inputFrame
 
         original_frame = cv2.cvtColor(self.currFrame, cv2.COLOR_BGR2RGB)
@@ -58,6 +62,7 @@ class carDetector:
         class_IDs = []
 
         netBounding_boxs = netBounding_boxs.asnumpy()
+        netBounding_boxs =netBounding_boxs  * 1.4066 #Converting back from 512 to 720 height 
         netScores = netScores.asnumpy()
         netClass_IDs = netClass_IDs.asnumpy()
 
@@ -65,40 +70,46 @@ class carDetector:
         for i, bbox in enumerate(netBounding_boxs[0]):
             if(netScores[0][i]< self.thresh):
                 break
-            currentBox = [((bbox[2]+bbox[0])/2).astype(int), ((bbox[3]+bbox[1])/2).astype(int), (bbox[2]-bbox[0]).astype(int), (bbox[3]-bbox[1]).astype(int)]
+            currentBox = [bbox[0].astype(int), bbox[1].astype(int), (bbox[2]-bbox[0]).astype(int), (bbox[3]-bbox[1]).astype(int)]
             boxes.append(currentBox)
             scores.append(netScores[0][i])
-            class_IDs.append(NUM_CLASS[int(netClass_IDs[0][i])])
+            class_IDs.append(self.NUM_CLASS[int(netClass_IDs[0][i])])
 
         #Match objects between frames
         finalBoxes = np.array(boxes) 
         finalNames = np.array(class_IDs)
         finalScores = np.array(scores)
-        features = np.array(encoder(original_frame, finalBoxes))
+        features = np.array(self.encoder(original_frame, finalBoxes))
         detections = [Detection(bbox, score, class_name, feature) for bbox, score, class_name, feature in zip(finalBoxes, finalScores, finalNames, features)]
 
-        tracker.predict()
-        tracker.update(detections)
+        self.tracker.predict()
+        self.tracker.update(detections)
 
         #Set new bounding boxes with IDs
         tracked_bboxes = []
-        for track in tracker.tracks:
+        for track in self.tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 5:
                 continue 
-            bbox = track.to_tlbr() 
-            class_name = track.get_class() 
-            tracking_id = track.track_id 
-            index = key_list[val_list.index(class_name)]
-            if(index ==2):
-                tracked_bboxes.append([tracking_id] + bbox.tolist()) 
+            bbox = track.to_tlbr() # Get the corrected/predicted bounding box
+            class_name = track.get_class() #Get the class name of particular object
+            tracking_id = track.track_id # Get the ID for the particular track
+            index = self.key_list[self.val_list.index(class_name)] # Get predicted object index by object name
+            tracked_bboxes.append( bbox.tolist() + [tracking_id, index] ) # Structure data, that we could use it with our draw_bbox function
 
         self.prevFrame = self.currFrame
-
+        image = draw_bbox(original_frame, tracked_bboxes, CLASSES=YOLO_COCO_CLASSES, tracking=True)
+        cv2.imwrite("../footage/newimage.jpg", image)
+        self.boundingBoxes = tracked_bboxes
         #Return bounding boxes with carIDs to broker
         return tracked_bboxes
 
-    def get_car_image(inputID, inputImg):
+    def get_car_image(self, inputID):
         print("hi")
+        for box in self.boundingBoxes:
+            if(box[4] == inputID):
+                return box
+
+        return []
         #Cross reference inputID with stored IDs
 
         #Highlight location of ID car on the inputImg
