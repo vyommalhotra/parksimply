@@ -1,4 +1,4 @@
-from cars import carDetector
+from cars import carDetector #import from carsGluon if you wanna use gluon
 from matcher import Matcher
 
 class Broker:

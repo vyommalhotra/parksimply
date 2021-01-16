@@ -1,4 +1,5 @@
-from yolov3.utils import Load_Yolo_model, image_preprocess, postprocess_boxes, nms, draw_bbox, read_class_names
+from gluoncv import model_zoo, data, utils
+from yolov3.utils import draw_bbox, read_class_names
 from yolov3.configs import *
 from deep_sort import nn_matching
 from deep_sort.detection import Detection
@@ -6,7 +7,6 @@ from deep_sort.tracker import Tracker
 from deep_sort import generate_detections as gdet
 import cv2
 import numpy as np
-import tensorflow as tf
 
 #Check out demo_yolo.py for explanation on how to set the model up
 
@@ -25,13 +25,10 @@ class carDetector:
 
         #Threshold of what is a car
         self.thresh = 0.7
-        self.input_size = YOLO_INPUT_SIZE
-        self.iou_threshold=0.45
 
         self.NUM_CLASS = read_class_names(YOLO_COCO_CLASSES)
         self.key_list = list(self.NUM_CLASS.keys()) 
         self.val_list = list(self.NUM_CLASS.values())
-        self.Track_only = ["car", "truck"]
 
         #Creating deep sort object, these parameters can be massaged
         max_cosine_distance = 0.7
@@ -42,7 +39,7 @@ class carDetector:
         self.tracker = Tracker(metric)
 
         #Creating our model, we can change this to other models if needed. Check model zoo online for more.
-        self.cvModel = Load_Yolo_model()
+        self.cvModel = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True)
         print("init carDetector")
 
     def get_cars(self, inputFrame):
@@ -51,30 +48,35 @@ class carDetector:
         original_frame = cv2.cvtColor(self.currFrame, cv2.COLOR_BGR2RGB)
         original_frame = cv2.cvtColor(original_frame, cv2.COLOR_BGR2RGB)
 
-        image_data = image_preprocess(np.copy(original_frame), [self.input_size, self.input_size])
-        #image_data = tf.expand_dims(image_data, 0)
-        image_data = image_data[np.newaxis, ...].astype(np.float32)
+        cv2.imwrite("../footage/currentImage.jpg", original_frame)
+        imlink = "../footage/currentImage.jpg"
+        
+        x, img = data.transforms.presets.yolo.load_test(imlink, short=512)
 
         #Detect cars here
-        pred_bbox = self.cvModel(image_data)
+        netClass_IDs, netScores, netBounding_boxs = self.cvModel(x)
 
-        pred_bbox = [tf.reshape(x, (-1, tf.shape(x)[-1])) for x in pred_bbox]
-        pred_bbox = tf.concat(pred_bbox, axis=0)
+        boxes = []
+        scores = []
+        class_IDs = []
 
-        bboxes = postprocess_boxes(pred_bbox, original_frame, self.input_size, self.thresh)
-        bboxes = nms(bboxes, self.iou_threshold, method='nms')
+        netBounding_boxs = netBounding_boxs.asnumpy()
+        netBounding_boxs =netBounding_boxs  * 1.4066 #Converting back from 512 to 720 height 
+        netScores = netScores.asnumpy()
+        netClass_IDs = netClass_IDs.asnumpy()
 
-        # extract bboxes to boxes (x, y, width, height), scores and names
-        boxes, scores, names = [], [], []
-        for bbox in bboxes:
-            if len(self.Track_only) !=0 and self.NUM_CLASS[int(bbox[5])] in self.Track_only or len(self.Track_only) == 0:
-                boxes.append([bbox[0].astype(int), bbox[1].astype(int), bbox[2].astype(int)-bbox[0].astype(int), bbox[3].astype(int)-bbox[1].astype(int)])
-                scores.append(bbox[4])
-                names.append(self.NUM_CLASS[int(bbox[5])])
+
+        for i, bbox in enumerate(netBounding_boxs[0]):
+            if(netScores[0][i]< self.thresh):
+                break
+            currentBox = [bbox[0].astype(int), bbox[1].astype(int), (bbox[2]-bbox[0]).astype(int), (bbox[3]-bbox[1]).astype(int)]
+            boxes.append(currentBox)
+            scores.append(netScores[0][i])
+            class_IDs.append(self.NUM_CLASS[int(netClass_IDs[0][i])])
 
         #Match objects between frames
         finalBoxes = np.array(boxes) 
-        finalNames = np.array(names)
+        finalNames = np.array(class_IDs)
         finalScores = np.array(scores)
         features = np.array(self.encoder(original_frame, finalBoxes))
         detections = [Detection(bbox, score, class_name, feature) for bbox, score, class_name, feature in zip(finalBoxes, finalScores, finalNames, features)]
