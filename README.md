@@ -3,7 +3,7 @@ Machine vision assisted parking system
 
 ## Dependencies
 - Git LFS
-- python (2 < ver. < 3.9)
+- python (3 < ver. < 3.9)
     - tensorflow
     - cv2
     - numpy
