@@ -23,6 +23,11 @@ class Broker:
     
     def is_footage_open(self):
         return self.footage.isOpened()
+
+    def write_to_buffer(self, frame_num, car_ids):
+        f = open("api/buffer.txt", "w")
+        f.write("frame {} : IDS {}\n".format(frame_num, car_ids))
+        f.close
     
     def process_frame(self):
         # get next frame from footage
@@ -40,7 +45,8 @@ class Broker:
 
             # get car Ids from car class
             car_ids = self.get_cars(frame)
-            print("frame {} : IDS {}".format(self.frame_num, car_ids)) #TODO: remove this
+            print("frame {} : IDS {}".format(self.frame_num, car_ids)) #TODO: <- remove this
+            self.write_to_buffer(self.frame_num, car_ids)
 
             # provide current spot and car IDS
             self.matcher.set_ids([],[])
@@ -63,6 +69,7 @@ class Broker:
         
         else:
             # done
+            self.write_to_buffer(0,0)
             return True
         
 
