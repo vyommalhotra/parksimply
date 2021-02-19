@@ -59,7 +59,7 @@ class Broker:
                 # get image from spot class then car class 
             #    self.get_spot_image()
                 #self.get_car_image()
-            print(self.car_detector.get_car_image(5))
+            print(self.car_detector.get_car_image(2))
 
                 # TODO: send image to front end
             #    pass

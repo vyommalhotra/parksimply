@@ -45,6 +45,24 @@ class carDetector:
         self.cvModel = Load_Yolo_model()
         print("init carDetector")
 
+
+    def get_bounding_box_iou(self, box1, box2):
+
+        left=max(box1[0], box2[0])
+        top=max(box1[1], box2[1])
+        right=min(box1[2], box2[2])
+        bottom=min(box1[3], box2[3])
+
+        if(right<left or bottom < top):
+            return 0.0
+        
+        intersect_area = (right - left + 1) * (bottom - top + 1)
+        area1 = (box1[2] - box1[0] + 1 ) * (box1[3] - box1[1] +1)
+        area2 = (box2[2] - box2[0] + 1 ) * (box2[3] - box2[1] +1)
+
+        iou = intersect_area / (float(area1 + area2 -intersect_area))
+        return iou
+
     def get_cars(self, inputFrame):
         self.currFrame = inputFrame
 
@@ -101,11 +119,14 @@ class carDetector:
         return tracked_bboxes
 
     def get_car_image(self, inputID):
-        print("hi")
         for box in self.boundingBoxes:
             if(box[4] == inputID):
+                verticies = np.array( [[[box[0],box[1]],[box[2],box[1]],[box[2],box[3]],[box[0],box[3]]]], dtype=np.int32 )
+                polyImage = self.currFrame.copy()
+                cv2.fillPoly(polyImage, verticies, 255)
+                image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
+                cv2.imwrite("../footage/blueSelection.jpg", image)
                 return box
-
         return []
         #Cross reference inputID with stored IDs
 
