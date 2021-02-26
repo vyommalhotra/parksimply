@@ -22,6 +22,7 @@ class carDetector:
         self.prevFrame = None #Store previous frame, don't know if we'll need this
         self.boundingBoxes = [] #Store bounding boxes of previous frame, will likely need this for object tracking
         self.currFrame = None
+        self.parkingSpots = []
 
         #Threshold of what is a car
         self.thresh = 0.7
@@ -62,6 +63,12 @@ class carDetector:
 
         iou = intersect_area / (float(area1 + area2 -intersect_area))
         return iou
+
+    def getPolygonIntersection(self, poly1, poly2):
+        return poly1.intersection(poly2).area
+
+    def get_spots(self, spotsArray):
+        self.parkingSpots = spotsArray
 
     def get_cars(self, inputFrame):
         self.currFrame = inputFrame

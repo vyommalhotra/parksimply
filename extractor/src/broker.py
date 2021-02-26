@@ -1,5 +1,6 @@
 from cars import carDetector #import from carsGluon if you wanna use gluon
 from matcher import Matcher
+from spots import spotDetector
 
 class Broker:
     def __init__(self, footage, skip):
@@ -8,9 +9,15 @@ class Broker:
         self.skip = skip
         self.matcher = Matcher() # keeps track of previous ID matches
         self.car_detector = carDetector()
+        self.spot_detector = spotDetector()
+        self.spotsArray = []
     
     def get_spots(self):
-        return []
+        self.spotsArray = spot_detector.getAllSpots()
+        return self.spotsArray
+
+    def give_spots(self):
+        self.car_detector.get_spots(self.spotsArray)
     
     def get_cars(self, frame):
         return self.car_detector.get_cars(frame)
