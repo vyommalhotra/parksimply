@@ -16,6 +16,11 @@ from shapely.geometry import Polygon
 # https://www.learnopencv.com/object-tracking-using-opencv-cpp-python/
 # http://davheld.github.io/GOTURN/GOTURN.html
 
+class spotObject:
+    def __init__(self, index, polygon):  
+        self.index = index  
+        self.polygon = polygon
+        self.isOccupied = False
 
 class carDetector:
 
@@ -23,7 +28,9 @@ class carDetector:
         self.prevFrame = None #Store previous frame, don't know if we'll need this
         self.boundingBoxes = [] #Store bounding boxes of previous frame, will likely need this for object tracking
         self.currFrame = None
-        self.parkingSpots = []
+        self.openParkingSpots = []
+        self.takenParkingSpots=[]
+        self.matched = []
 
         #Threshold of what is a car
         self.thresh = 0.7
@@ -69,9 +76,31 @@ class carDetector:
         return poly1.intersection(poly2).area
 
     def get_spots(self, spotsArray):
-        self.parkingSpots = spotsArray
-        print(self.parkingSpots)
-    
+        i = 0
+        for spot in spotsArray:
+            self.openParkingSpots.append(spotObject(i, spot))
+            i = i+1
+        poly = self.openParkingSpots[0].polygon
+        print(poly)
+        int_coords = lambda x: np.array(x).round().astype(np.int32)
+        exterior = [int_coords(poly.exterior.coords)]
+        polyImage = self.currFrame.copy()
+        cv2.fillPoly(polyImage, exterior, 255)
+        image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
+        cv2.imwrite("../footage/poly.jpg", image)
+
+    def matchCar(self, carID):
+        if(len(self.openParkingSpots ) < 1):
+            print("No Open Spots")
+            return
+        else:
+            selectedSpot = self.openParkingSpots.pop()
+            newMatch = (selectedSpot.index, carID)
+            self.matched.append(newMatch)
+            self.takenParkingSpots.append(selectedSpot)
+            print(self.matched)
+
+
     def convertBbToPolygon(self, box):
         print("Poly")
 

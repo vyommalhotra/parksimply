@@ -1,6 +1,5 @@
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
-import geopandas as gpd
 import numpy as np
 
 class spotDetector: 
@@ -10,7 +9,7 @@ class spotDetector:
         print(self.allSpots)
 
     def getAllSpots(self):
-        self.allSpots.append(Polygon([(0,0),(20, 0),(20, 20),(0, 20)]))
+        self.allSpots.append(Polygon([(515,338),(535, 372),(578, 365),(555, 330)]))
         #self.allSpots.append(Polygon([(),(),(),()]))
         #self.allSpots.append(Polygon([(),(),(),()]))
         #self.allSpots.append(Polygon([(),(),(),()]))
