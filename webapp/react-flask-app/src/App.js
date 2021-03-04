@@ -7,9 +7,18 @@ function App() {
   const [currentFrame, setCurrentFrame] = useState(0);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {fetch('/get_car_ids').then(res => res.json()).then(data => {
-      setCurrentFrame(data.data);
-    }) }, 2000) 
+    const intervalId = setInterval(() => 
+    {
+      let str = '/get_display?timestamp=' + new Date().getTime().toString()
+        fetch(str)
+        .then(res => res.blob())
+        .then(image =>
+          {
+            URL.revokeObjectURL(currentFrame);
+            setCurrentFrame(URL.createObjectURL(image));
+          }
+        )         
+    }, 500)
     return () => clearInterval(intervalId);
   }, []);
 
@@ -20,7 +29,8 @@ function App() {
         <p>
           Park Simply <br></br>
           Reading from /extractor/api/buffer.txt <br></br>
-          {currentFrame}
+          {/* {currentFrame} */}
+          <img src={currentFrame}/>
         </p>
         <a
           className="App-link"
