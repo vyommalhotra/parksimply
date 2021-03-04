@@ -1,6 +1,5 @@
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
-import geopandas as gpd
 import numpy as np
 
 class spotDetector: 
