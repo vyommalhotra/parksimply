@@ -7,6 +7,7 @@ from deep_sort import generate_detections as gdet
 import cv2
 import numpy as np
 import tensorflow as tf
+from shapely.geometry import Polygon 
 
 #Check out demo_yolo.py for explanation on how to set the model up
 
@@ -69,6 +70,13 @@ class carDetector:
 
     def get_spots(self, spotsArray):
         self.parkingSpots = spotsArray
+        print(self.parkingSpots)
+    
+    def convertBbToPolygon(self, box):
+        print("Poly")
+
+    def convertPolygonToBb(self, poly):
+        print("Bb")
 
     def get_cars(self, inputFrame):
         self.currFrame = inputFrame
@@ -133,7 +141,7 @@ class carDetector:
                 cv2.fillPoly(polyImage, verticies, 255)
                 image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
                 cv2.imwrite("../footage/blueSelection.jpg", image)
-                return box
+                return image
         return []
         #Cross reference inputID with stored IDs
 

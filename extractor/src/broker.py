@@ -13,7 +13,7 @@ class Broker:
         self.spotsArray = []
     
     def get_spots(self):
-        self.spotsArray = spot_detector.getAllSpots()
+        self.spotsArray = self.spot_detector.returnSpots()
         return self.spotsArray
 
     def give_spots(self):
@@ -48,7 +48,8 @@ class Broker:
             self.footage.set(1, self.frame_num)
 
             # get spot Ids from spot class
-            #spot_ids = self.get_spots(frame)
+            spot_ids = self.get_spots()
+            self.give_spots()
 
             # get car Ids from car class
             car_ids = self.get_cars(frame)
