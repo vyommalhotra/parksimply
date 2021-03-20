@@ -177,37 +177,3 @@ class carDetector:
         #Highlight location of ID car on the inputImg
 
         #Return highlighted image to broker
-
-
-
-        def match_all(self):
-            parkedCars = []
-            unparkedCars = []
-            occupiedSpots = []
-            unoccupiedSpots = []
-            matched = []
-
-            for car in self.cars: # Iterate through every single car
-                if(self.getPolygonIntersection(car) > 0.6): # Check if IOU is greater than 0.6
-                    parkedCars.append(car) # Add this car to parked cars array
-                else:
-                    unparkedCars.append(car) # Add this car to unparked car array
-
-            for spot in self.Spots:
-                if(self.getPolygonIntersection(spot) > 0.6): # Check if IOU is greater than 0.6
-                    occupiedSpots.append(spot) # Add this spot to occupied spots array
-                else:
-                    unoccupiedSpots.append(spot) # Add this spot to unoccupied spots array
-
-            for car in self.cars:
-                if(len(unoccupiedSpots ) < 1): # Check if any spots are open
-                    print("No Open Spots")
-                    return
-
-                else:
-                    selectedSpot = unoccupiedSpots.pop() # Remove selected spot from unoccupied spots list
-                    newMatch = (selectedSpot.index, car.carID) # Create a new match
-                    matched.append(newMatch)
-                    occupiedSpots.append(selectedSpot) # Add selected spot to occupied spots list
-                    unparkedCars.pop(car) 
-                    parkedCars.append(car)
