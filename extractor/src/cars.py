@@ -7,7 +7,7 @@ from deep_sort import generate_detections as gdet
 import cv2
 import numpy as np
 import tensorflow as tf
-from shapely.geometry import Polygon 
+from shapely.geometry import Polygon , box
 
 #Check out demo_yolo.py for explanation on how to set the model up
 
@@ -29,8 +29,10 @@ class carDetector:
         self.boundingBoxes = [] #Store bounding boxes of previous frame, will likely need this for object tracking
         self.currFrame = None
         self.openParkingSpots = []
-        self.takenParkingSpots=[]
+        self.assignedParkingSpots=[]
+        self.occupiedParkingSpots=[]
         self.matched = []
+        self.matchedCars = []
 
         #Threshold of what is a car
         self.thresh = 0.7
@@ -52,6 +54,8 @@ class carDetector:
 
         #Creating our model, we can change this to other models if needed. Check model zoo online for more.
         self.cvModel = Load_Yolo_model()
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.out = cv2.VideoWriter('../footage/TrimmedVidDemo.mp4', fourcc, 1, (1280, 720)) # output_path must be .mp4
         print("init carDetector")
 
 
@@ -73,35 +77,84 @@ class carDetector:
         return iou
 
     def getPolygonIntersection(self, poly1, poly2):
-        return poly1.intersection(poly2).area
+        overlap = poly1.intersection(poly2).area
+        total = poly1.area + poly2.area - overlap
+        return overlap/total
+    
+    def markSpots(self):
+        polyImage = self.currFrame.copy()
+        for poly in self.openParkingSpots:
+            originalPoly = poly
+            poly = poly.polygon
+            int_coords = lambda x: np.array(x).round().astype(np.int32)
+            exterior = [int_coords(poly.exterior.coords)]
+            
+            if(self.checkIfOccupied(poly)):
+                cv2.fillPoly(polyImage, exterior, [0, 0, 255 ])
+                self.occupiedParkingSpots.append(originalPoly)
+            else:
+                cv2.fillPoly(polyImage, exterior, [0, 225, 0])
+        for poly in self.assignedParkingSpots:
+            originalPoly = poly
+            poly = poly.polygon
+            int_coords = lambda x: np.array(x).round().astype(np.int32)
+            exterior = [int_coords(poly.exterior.coords)]
+            if(self.checkIfOccupied(poly)):
+                cv2.fillPoly(polyImage, exterior, [0, 0, 255 ])
+                self.assignedParkingSpots.remove(originalPoly)
+                self.occupiedParkingSpots.append(originalPoly)
+            else: 
+                cv2.fillPoly(polyImage, exterior, [0, 255, 255 ])
+        for poly in self.occupiedParkingSpots:
+            originalPoly = poly
+            poly = poly.polygon
+            int_coords = lambda x: np.array(x).round().astype(np.int32)
+            exterior = [int_coords(poly.exterior.coords)]
+            if(self.checkIfOccupied(poly)):
+                cv2.fillPoly(polyImage, exterior, [0, 0, 255 ])
+            else: 
+                cv2.fillPoly(polyImage, exterior, [0, 255, 0 ])
+                self.occupiedParkingSpots.remove(originalPoly)
+                self.openParkingSpots.append(originalPoly)
+        image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
+        cv2.imwrite("../footage/poly.jpg", image)
+        self.out.write(image)
+        return
+    
+    def checkIfOccupied(self, poly):
+        for car in self.boundingBoxes:
+            carPoly = self.convertBbToPolygon(car)
+            if(self.getPolygonIntersection(poly, carPoly) > 0.3):
+                return True
+        return False
 
     def get_spots(self, spotsArray):
         i = 0
+        print(self.openParkingSpots)
         for spot in spotsArray:
             self.openParkingSpots.append(spotObject(i, spot))
             i = i+1
-        poly = self.openParkingSpots[0].polygon
-        print(poly)
-        int_coords = lambda x: np.array(x).round().astype(np.int32)
-        exterior = [int_coords(poly.exterior.coords)]
-        polyImage = self.currFrame.copy()
-        cv2.fillPoly(polyImage, exterior, 255)
-        image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
-        cv2.imwrite("../footage/poly.jpg", image)
+        
 
     def matchCar(self, carID):
         if(len(self.openParkingSpots ) < 1):
             print("No Open Spots")
             return
+        if(carID in self.matchedCars):
+            print("Car already matched")
+            return
         else:
             selectedSpot = self.openParkingSpots.pop()
             newMatch = (selectedSpot.index, carID)
             self.matched.append(newMatch)
-            self.takenParkingSpots.append(selectedSpot)
+            self.matchedCars.append(carID)
+            self.assignedParkingSpots.append(selectedSpot)
             print(self.matched)
 
 
-    def convertBbToPolygon(self, box):
+    def convertBbToPolygon(self, bbox):
+        poly = box(bbox[0], bbox[1], bbox[2], bbox[3], True)
+        return poly
         print("Poly")
 
     def convertPolygonToBb(self, poly):
@@ -158,6 +211,7 @@ class carDetector:
         self.prevFrame = self.currFrame
         image = draw_bbox(original_frame, tracked_bboxes, CLASSES=YOLO_COCO_CLASSES, tracking=True)
         cv2.imwrite("../footage/newimage.jpg", image)
+        self.markSpots()
         self.boundingBoxes = tracked_bboxes
         #Return bounding boxes with carIDs to broker
         return tracked_bboxes
