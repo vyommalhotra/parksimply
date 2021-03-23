@@ -68,7 +68,7 @@ class Broker:
             #    self.get_spot_image()
                 #self.get_car_image()
             #print(self.car_detector.get_car_image(2))
-            if(self.frame_num == 15):
+            if(self.frame_num == 45):
                 self.car_detector.matchCar(2)
 
                 # TODO: send image to front end

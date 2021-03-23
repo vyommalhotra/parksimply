@@ -129,7 +129,7 @@ class carDetector:
     def checkIfOccupied(self, poly):
         for car in self.boundingBoxes:
             carPoly = self.convertBbToPolygon(car)
-            if(self.getPolygonIntersection(poly, carPoly) > 0.1):
+            if(self.getPolygonIntersection(poly, carPoly) > 0.25):
                 return True
         return False
 
