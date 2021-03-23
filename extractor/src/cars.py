@@ -122,7 +122,7 @@ class carDetector:
                 self.openParkingSpots.append(originalPoly)
         image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
         cv2.imwrite("../footage/poly.jpg", image)
-        cv2.imwrite("./api/display.jpg", image)
+        cv2.imwrite("../src/api/display.jpg", image)
         self.out.write(image)
         return
     

@@ -54,7 +54,7 @@ class Broker:
 
             # get car Ids from car class
             car_ids = self.get_cars(frame)
-            #print("frame {} : IDS {}".format(self.frame_num, car_ids)) #TODO: <- remove this
+            print("frame {} : IDS {}".format(self.frame_num, car_ids)) #TODO: <- remove this
             self.write_to_buffer(self.frame_num, car_ids)
             # provide current spot and car IDS
             self.matcher.set_ids([],[])
