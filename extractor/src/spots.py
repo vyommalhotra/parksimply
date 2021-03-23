@@ -5,8 +5,8 @@ import numpy as np
 class spotDetector: 
     def __init__(self):
         self.allSpots=[]
-        self.convert = 1
-        #self.convert = 1.5
+        #self.convert = 1
+        self.convert = 1.5
         self.getAllSpots()
         print(self.allSpots)
         

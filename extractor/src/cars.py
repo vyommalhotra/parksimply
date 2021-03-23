@@ -53,9 +53,13 @@ class carDetector:
         self.tracker = Tracker(metric)
 
         #Creating our model, we can change this to other models if needed. Check model zoo online for more.
+        vid = cv2.VideoCapture('../footage/TrimmedVid.mp4')
+        width = int(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(vid.get(cv2.CAP_PROP_FPS))
         self.cvModel = Load_Yolo_model()
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        self.out = cv2.VideoWriter('../footage/TrimmedVidDemo.mp4', fourcc, 1, (1280, 720)) # output_path must be .mp4
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.out = cv2.VideoWriter('../footage/TrimmedVidDemo.mp4', fourcc, fps, (width, height), 1) # output_path must be .mp4
         print("init carDetector")
 
 
@@ -118,13 +122,14 @@ class carDetector:
                 self.openParkingSpots.append(originalPoly)
         image = cv2.addWeighted(polyImage, 0.3, self.currFrame, 0.7, 0.0)
         cv2.imwrite("../footage/poly.jpg", image)
+        cv2.imwrite("./api/display.jpg", image)
         self.out.write(image)
         return
     
     def checkIfOccupied(self, poly):
         for car in self.boundingBoxes:
             carPoly = self.convertBbToPolygon(car)
-            if(self.getPolygonIntersection(poly, carPoly) > 0.3):
+            if(self.getPolygonIntersection(poly, carPoly) > 0.1):
                 return True
         return False
 
